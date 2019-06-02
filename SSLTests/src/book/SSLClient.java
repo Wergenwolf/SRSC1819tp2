@@ -1,6 +1,7 @@
-package book;
+package finalSSL;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -12,60 +13,80 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-public class SSLClient {
+public class SSLClient extends Socket {
 
-	SSLSocketFactory factory;
-	SSLSocket socket;
-	SSLContext sslContext;
-	KeyStore ks;
-	KeyManagerFactory keyManagerFactory;
+	private SSLSocketFactory socketFactory;
+	private SSLSocket clientSocket;
+	private SSLContext sslContext;
+	private KeyStore ks;
+	private KeyManagerFactory keyManagerFactory;
 	
-	Boolean mutualAuth;
-	String keystorePath;
-	String truststorePath;
+	private Boolean mutualAuth;
+	private String trustStorePath;
+	private String keyStorePath;
+	private String[] protocols;
+	private String[] ciphersuites;
 	
-	char[] keystorePassword;
-
-	public SSLClient() {
-		
-		// TODO Testing only
-		keystorePassword = new char[] { '9', '8', '7', '6', '5', '4' };
-		
-		startConfig();
+	private String url;
+	private int port;
+	private String configPath;
+	private char[] keyStorePassword;
+	
+	public SSLClient(String url, int port, String configPaths, char[] keyStorePassword) {
+		this.url = url;
+		this.port = port;
+		this.configPath = configPaths;
+		this.keyStorePassword = keyStorePassword;
+		readClientProperties();
+		configureClient();
+	}
+	
+	@Override
+	public InputStream getInputStream() throws IOException {
+		return clientSocket.getInputStream();
+	}
+	
+	@Override
+	public OutputStream getOutputStream() throws IOException {
+		return clientSocket.getOutputStream();
+	}
+	
+	private void configureClient() {
 		try {
-			doProtocol(socket);
+			
+			if(!mutualAuth) {
+				socketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+			}
+			else {
+				ks = KeyStore.getInstance("JKS");
+				ks.load(new FileInputStream(keyStorePath), keyStorePassword);
+				keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+				keyManagerFactory.init(ks, keyStorePassword);
+				sslContext = SSLContext.getInstance("TLS");
+				sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
+				socketFactory = sslContext.getSocketFactory();
+			}
+			
+			clientSocket = (SSLSocket) socketFactory.createSocket(url, port);
+//			clientSocket.setEnabledCipherSuites(new String[] {"TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384"});
+//			clientSocket.setEnabledProtocols(new String[]{"TLSv1.2"});
+			clientSocket.startHandshake();
+			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
-
-	private void doProtocol(Socket socket) throws Exception {
-		OutputStream out = socket.getOutputStream();
-		InputStream in = socket.getInputStream();
-
-		out.write("World".getBytes());
-		out.write('!');
-
-		int ch = 0;
-		while ((ch = in.read()) != '!') {
-			System.out.println((char) ch);
-		}
-
-		System.out.println((char) ch);
-	}
-
-	private void readProperties() {
+	
+	private void readClientProperties() {
 
 		try {
 			Properties prop = new Properties();
-			String filename = "client/client.properties";
+			String filename = configPath;
 			InputStream in = new FileInputStream(filename);
 			prop.load(in);
-			keystorePath = prop.getProperty("keyStorePath");
-			truststorePath = prop.getProperty("trustStorePath");
-			System.setProperty("javax.net.ssl.trustStore", truststorePath);
+			keyStorePath = prop.getProperty("keyStorePath");
+			trustStorePath = prop.getProperty("trustStorePath");
+			System.setProperty("javax.net.ssl.trustStore", trustStorePath);
 			mutualAuth = false;
 			if(prop.getProperty("TLS-AUTH").equalsIgnoreCase("MUTUAL"))
 				mutualAuth = true;
@@ -75,40 +96,5 @@ public class SSLClient {
 		}
 
 	}
-
-	private void configureSocket() {
-		try {
-			
-			if(!mutualAuth) {
-				factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-			}
-			else {
-				ks = KeyStore.getInstance("JKS");
-				ks.load(new FileInputStream(keystorePath), keystorePassword);
-				keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
-				keyManagerFactory.init(ks, keystorePassword);
-				sslContext = SSLContext.getInstance("TLS");
-				sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
-				factory = sslContext.getSocketFactory();
-			}
-			
-			socket = (SSLSocket) factory.createSocket("localhost", 8123);
-//			socket.setEnabledCipherSuites(new String[] {"TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384"});
-//			socket.setEnabledProtocols(new String[]{"TLSv1.2"});
-			socket.startHandshake();
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 	
-	private void startConfig() {
-		readProperties();
-		configureSocket();
-	}
-	
-	public static void main(String[] args) {
-		new SSLClient();
-	}
-
 }
