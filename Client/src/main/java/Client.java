@@ -85,7 +85,7 @@ public class Client {
         client.close();
     }
 
-    private static void login(String username, String password) throws IOException {
+    private static void login2(String username, String password) throws IOException {
         int tmpBytesToRead;
 
 
@@ -101,7 +101,7 @@ public class Client {
 
     }
 
-    private static void login2(String username, String password) throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, BadPaddingException, IllegalBlockSizeException, SignatureException {
+    private static void login(String username, String password) throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, BadPaddingException, IllegalBlockSizeException, SignatureException {
         int tmpBytesToRead;
 
 
@@ -196,8 +196,8 @@ public class Client {
         byte[] cryptedToken = new byte[tmpBytesToRead];
         reader.readFully(cryptedToken);
 
-        byte[] clearToken = AliceCipher.decrypt(cryptedToken);
-        String strClearToken = new String(clearToken);
+        //byte[] clearToken = AliceCipher.decrypt(cryptedToken);
+        String strClearToken = new String(cryptedToken);
         System.out.println(strClearToken);
     }
 

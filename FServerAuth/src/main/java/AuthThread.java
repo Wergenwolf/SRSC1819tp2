@@ -1,7 +1,9 @@
+import Resources.AccessOperation;
 import Resources.Account;
 import Utils.CryptoAESUtil;
 import Utils.DSASignature;
 import Utils.DiffieHellman;
+import Utils.TokenUtil;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedReader;
@@ -48,7 +50,7 @@ public class AuthThread extends Thread {
         return buf.toString();
     }
 
-    public void run() {
+    public void run2() {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         int tmpBytesToRead;
         BufferedReader r = null;
@@ -79,7 +81,7 @@ public class AuthThread extends Thread {
         }
     }
 
-    public void run2() {
+    public void run() {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         int tmpBytesToRead;
         BufferedReader r = null;
@@ -195,11 +197,16 @@ public class AuthThread extends Thread {
                 if (!isPWDValid || (nonceReceived - 1) != sRandInt1)
                     System.err.println("Password/nonce not valid aborting");
                 else {
-                    byte[] token = bobCipher.encrypt(Authenticator.generateToken(username).getBytes());
+                    String strToken = Authenticator.generateToken(username);
+                    acc.setToken(strToken);
+                    byte[] token = strToken.getBytes();
 
                     //byte[] signedToken = DSASigner.sign(token.getBytes());
                     writer.writeInt(token.length);
                     writer.write(token);
+
+                    System.out.println("Does it have permission?");
+                    System.out.println(TokenUtil.checkPermission(acc, "Fserver", AccessOperation.READ));
                 }
 
             }

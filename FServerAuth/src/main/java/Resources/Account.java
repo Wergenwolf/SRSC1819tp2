@@ -15,6 +15,16 @@ public class Account {
     private boolean loggedIn;
     private boolean locked;
     private String salt;
+    private String token;
+
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
 
     /**
      * Creates an account

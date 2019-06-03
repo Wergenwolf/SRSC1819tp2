@@ -3,7 +3,7 @@ import Resources.AccessOperation;
 import Resources.Account;
 import Resources.Token;
 import Utils.CryptoUtil;
-import Utils.TokenMaker;
+import Utils.TokenUtil;
 
 import java.io.IOException;
 import java.util.Date;
@@ -90,6 +90,6 @@ public class Authenticator {
     public static String generateToken(String username) throws Exception {
         Date now = new Date();
         Date end = new Date(now.getTime() + 1000 * EXPIRE_TIME);
-        return TokenMaker.genToken(new Token("Fserver", AccessOperation.READ, end.getTime()));
+        return TokenUtil.genToken(new Token("Fserver", AccessOperation.READ, end.getTime()));
     }
 }

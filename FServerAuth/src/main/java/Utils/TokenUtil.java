@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class TokenMaker {
+public class TokenUtil {
 
     static protected Token makeKey(String Resource, AccessOperation Operation, long ExpireTime) {
         return new Token(Resource, Operation, ExpireTime);
@@ -27,20 +27,20 @@ public class TokenMaker {
         return new Token(Resource, Operation, ExpireTime, Account);
     }
 
-    static public String genToken(Token capability) throws Exception {
-        String token = capability.getIdentifier();
-        token += capability.getOperation().name() + ".";
+    static public String genToken(Token token) throws Exception {
+        String strToken = token.getIdentifier();
+        strToken += token.getOperation().name() + ".";
 
-        if (capability.getExpirationDate() != 0)
-            token += String.valueOf(capability.getExpirationDate());
-        if (capability.getLinkedAccount() != null)
-            token += capability.getLinkedAccount();
+        if (token.getExpirationDate() != 0)
+            strToken += String.valueOf(token.getExpirationDate());
+        if (token.getLinkedAccount() != null)
+            strToken += token.getLinkedAccount();
 
-        token = CryptoUtil.encryptAES(token);
+        strToken = CryptoUtil.encryptAES(strToken);
 
-        if (capability.getLinkedAccount() != null)
-            token = token + "." + capability.getLinkedAccount();
-        return token + "." + capability.getExpirationDate();
+        if (token.getLinkedAccount() != null)
+            strToken = strToken + "." + token.getLinkedAccount();
+        return strToken + "." + token.getExpirationDate();
     }
 
     //Use this one when u dont include the Account in the capability
@@ -73,40 +73,36 @@ public class TokenMaker {
 
     //Use this when u include the Account in the capability (wont be used o this job but its here)
     static public boolean checkPermission(Account account, String Resource, AccessOperation Operation) throws Exception {
-        List<String> capabilities = account.getCapabilities();
+        String token = account.getToken();
         Date now = new Date();
         Date expirationCapa;
         boolean auth = false;
 
-        Iterator<String> it = capabilities.iterator();
-        while (it.hasNext()) {
-            String tokenKey = it.next();
-            int countDots = countDots(tokenKey);
-            String[] fields = tokenKey.split(Pattern.quote("."));
-            long exTime = 0;
-            String acc = null;
-            switch (countDots) {
-                case 1:
-                    exTime = Long.parseLong(fields[1]);
-                    break;
-                case 2:
-                    exTime = Long.parseLong(fields[2]);
-                    acc = fields[1];
-                    break;
-            }
-            expirationCapa = new Date(exTime);
-            if (acc != null && !account.getUsername().equalsIgnoreCase(acc)) {
-                it.remove();
-                continue;
-            }
-            if (now.after(expirationCapa) && exTime != 0) {
-                it.remove();
-                continue;
-            }
-
-            if (genToken(makeKey(Resource, Operation, exTime, acc)).equals(tokenKey))
-                auth = true;
+        String tokenKey = token;
+        int countDots = countDots(tokenKey);
+        String[] fields = tokenKey.split(Pattern.quote("."));
+        long exTime = 0;
+        String acc = null;
+        switch (countDots) {
+            case 1:
+                exTime = Long.parseLong(fields[1]);
+                break;
+            case 2:
+                exTime = Long.parseLong(fields[2]);
+                acc = fields[1];
+                break;
         }
+        expirationCapa = new Date(exTime);
+        if (acc != null && !account.getUsername().equalsIgnoreCase(acc)) {
+            return false;
+        }
+        if (now.after(expirationCapa) && exTime != 0) {
+            return false;
+        }
+
+        if (genToken(makeKey(Resource, Operation, exTime, acc)).equals(tokenKey))
+            auth = true;
+
         return auth;
     }
 
