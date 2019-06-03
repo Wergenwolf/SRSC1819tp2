@@ -1,4 +1,4 @@
-package DiffieHellman;
+package Utils;
 
 import javax.crypto.KeyAgreement;
 import javax.crypto.interfaces.DHPublicKey;

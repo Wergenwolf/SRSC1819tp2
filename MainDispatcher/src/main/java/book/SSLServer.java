@@ -1,5 +1,6 @@
-package finalSSL;
+package book;
 
+import javax.net.ssl.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,12 +8,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.security.KeyStore;
 import java.util.Properties;
-
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSocket;
 
 public class SSLServer extends Socket {
 
@@ -94,9 +89,7 @@ public class SSLServer extends Socket {
 			in.close();
 			protocols = prop.getProperty("TLS-PROT-ENF").split("\\s");
 			ciphersuites = prop.getProperty("CIPHERSUITES").split("\\s");
-			mutualAuth = false;
-			if(prop.getProperty("TLS-AUTH").equalsIgnoreCase("mutual"))
-				mutualAuth = true;
+			mutualAuth = prop.getProperty("TLS-AUTH").equalsIgnoreCase("mutual");
 			
 			filename = configPaths[1];
 			in = new FileInputStream(filename);

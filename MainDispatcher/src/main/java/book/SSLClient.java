@@ -1,5 +1,9 @@
-package finalSSL;
+package book;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,11 +11,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.security.KeyStore;
 import java.util.Properties;
-
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 
 public class SSLClient extends Socket {
 
@@ -87,9 +86,7 @@ public class SSLClient extends Socket {
 			keyStorePath = prop.getProperty("keyStorePath");
 			trustStorePath = prop.getProperty("trustStorePath");
 			System.setProperty("javax.net.ssl.trustStore", trustStorePath);
-			mutualAuth = false;
-			if(prop.getProperty("TLS-AUTH").equalsIgnoreCase("MUTUAL"))
-				mutualAuth = true;
+            mutualAuth = prop.getProperty("TLS-AUTH").equalsIgnoreCase("MUTUAL");
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.err.println("[SSLClient] Failed to set truststore");

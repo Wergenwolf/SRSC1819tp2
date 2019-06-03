@@ -1,13 +1,19 @@
 import Exceptions.*;
+import Resources.AccessOperation;
 import Resources.Account;
+import Resources.Token;
 import Utils.CryptoUtil;
+import Utils.TokenMaker;
 
 import java.io.IOException;
+import java.util.Date;
 
 
 public class Authenticator {
 
-    public static void create_account(String username, String email, String name, String pwd1, String pwd2) throws PasswordMismatchException, UsernameInUseException, PasswordTooWeakException, PasswordDoesNotMeetRequirementsException, UsernameDoesNotMeetRequirementsException, IOException {
+    public final static long EXPIRE_TIME = 60 * 60 * 3; //3 Horas
+
+    public static synchronized void create_account(String username, String email, String name, String pwd1, String pwd2) throws PasswordMismatchException, UsernameInUseException, PasswordTooWeakException, PasswordDoesNotMeetRequirementsException, UsernameDoesNotMeetRequirementsException, IOException {
         if (!pwd1.equals(pwd2)) throw new PasswordMismatchException();
         if (Storage.getAccount(name.toLowerCase()) != null) throw new UsernameInUseException();
 
@@ -31,12 +37,12 @@ public class Authenticator {
 
     }
 
-    public static void delete_account(String name) throws UndefinedAccountException {
+    public static synchronized void delete_account(String name) throws UndefinedAccountException {
         if (Storage.removeAccount(name.toLowerCase()) == 0)
             throw new UndefinedAccountException("No account was found");
     }
 
-    public static void change_pwd(String name, String pwd1, String pwd2) throws UndefinedAccountException, PasswordMismatchException, PasswordTooWeakException, PasswordDoesNotMeetRequirementsException {
+    public static synchronized void change_pwd(String name, String pwd1, String pwd2) throws UndefinedAccountException, PasswordMismatchException, PasswordTooWeakException, PasswordDoesNotMeetRequirementsException {
         if (!pwd1.equals(pwd2)) throw new PasswordMismatchException();
 
         Account acc = Storage.getAccount(name.toLowerCase());
@@ -69,22 +75,21 @@ public class Authenticator {
         return acc;
     }
 
-//    public static Account login(HttpServletRequest req, HttpServletResponse resp) throws AuthenticationErrorException {
-//        Account acc;
-//        try {
-//            acc = new Account(req.getSession().getAttribute("USER").toString(), req.getSession().getAttribute("PASS").toString(), req.getSession().getAttribute("ROLE").toString(), req.getSession().getAttribute("LOCKED").toString(), req.getSession().getAttribute("LOGGED_IN").toString());
-//            Account acc2 = get_account(acc.getUsername());
-//            if (!acc.equals(acc2)) throw new AuthenticationErrorException();
-//        } catch (Exception e) {
-//            throw new AuthenticationErrorException();
-//        }
-//        acc.getCapabilities().addAll((ArrayList<String>) req.getSession().getAttribute("CAPABILITIES"));
-//        return acc;
-//    }
-
     public static boolean checkPassword(String username, String password) throws UndefinedAccountException {
         Account acc = get_account(username);
 
         return CryptoUtil.doesPasswordMatch(password, acc.getPassword());
+    }
+
+    public static boolean checkPasswordHash(String username, String pwDstr) throws UndefinedAccountException {
+        Account acc = get_account(username);
+
+        return acc.getPassword().equals(pwDstr);
+    }
+
+    public static String generateToken(String username) throws Exception {
+        Date now = new Date();
+        Date end = new Date(now.getTime() + 1000 * EXPIRE_TIME);
+        return TokenMaker.genToken(new Token("Fserver", AccessOperation.READ, end.getTime()));
     }
 }

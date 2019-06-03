@@ -27,7 +27,7 @@ public class Storage {
 
             //Get user
             if (rs.next()) {
-                Account acc = new Account(rs.getString("Username"), rs.getString("Email"), rs.getString("Name"), rs.getString("Password"), "false", String.valueOf(rs.getBoolean("Locked")));
+                Account acc = new Account(rs.getString("Username"), rs.getString("Email"), rs.getString("Name"), rs.getString("Password"), "false", String.valueOf(rs.getBoolean("Locked")), rs.getString("Salt"));
 
                 ps.close();
                 return acc;
@@ -46,13 +46,15 @@ public class Storage {
         try {
             Connection connection = dbConnection.getConnection();
             //Execute query
-            PreparedStatement ps = connection.prepareStatement("INSERT INTO Accounts VALUES(?,?,?,?,?)");
+            PreparedStatement ps = connection.prepareStatement("INSERT INTO Accounts VALUES(?,?,?,?,?,?)");
 
             ps.setString(1, acc.getUsername());
             ps.setString(2, acc.getEmail());
             ps.setString(3, acc.getName());
             ps.setString(4, acc.getPassword());
             ps.setBoolean(5, acc.isLocked());
+            ps.setString(6, acc.getSalt());
+
             int i = ps.executeUpdate();
             ps.close();
             connection.close();
@@ -63,7 +65,7 @@ public class Storage {
     }
 
     static void updateAccount(Account acc) {
-        String sql = "UPDATE Accounts SET Password = ?,Locked = ? WHERE Username = ?";
+        String sql = "UPDATE Accounts SET Password = ?,Locked = ?,Salt = ? WHERE Username = ?";
         try {
             Connection connection = dbConnection.getConnection();
             PreparedStatement ps = connection.prepareStatement(sql);
@@ -71,7 +73,8 @@ public class Storage {
             // set the corresponding param
             ps.setString(1, acc.getPassword());
             ps.setBoolean(2, acc.isLocked());
-            ps.setString(3, acc.getUsername());
+            ps.setString(3, acc.getSalt());
+            ps.setString(4, acc.getUsername());
             // execute the update statement
             ps.executeUpdate();
             ps.close();
