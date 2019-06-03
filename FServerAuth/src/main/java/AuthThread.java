@@ -7,6 +7,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.security.SecureRandom;
 import java.security.Security;
@@ -48,6 +49,37 @@ public class AuthThread extends Thread {
     }
 
     public void run() {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        int tmpBytesToRead;
+        BufferedReader r = null;
+
+        try {
+            reader = new DataInputStream(this.socket.getInputStream());
+            writer = new DataOutputStream(this.socket.getOutputStream());
+
+            System.out.println(reader.readUTF());
+
+            String username = reader.readUTF();
+            String password = reader.readUTF();
+
+            boolean isPWDValid = Authenticator.checkPassword(username, password);
+
+            if (isPWDValid) {
+                String token = Authenticator.generateToken(username);
+                byte[] tokenBytes = token.getBytes();
+                writer.writeInt(tokenBytes.length);
+                writer.write(tokenBytes);
+
+                System.out.println("Authenticated");
+            }
+
+            System.out.println("Socket closed");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void run2() {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
         int tmpBytesToRead;
         BufferedReader r = null;
@@ -177,5 +209,15 @@ public class AuthThread extends Thread {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void getParams() throws IOException {
+        //Get params like IV
+        int tmpBytesToRead = reader.readInt();
+        byte[] AliceParams = new byte[tmpBytesToRead];
+        reader.readFully(AliceParams);
+
+        System.out.println("got params:");
+        System.out.println(toHexString(AliceParams));
     }
 }

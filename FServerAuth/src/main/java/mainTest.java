@@ -1,5 +1,4 @@
 import Exceptions.*;
-import Resources.Account;
 
 import java.io.IOException;
 
@@ -7,7 +6,7 @@ public class mainTest {
 
     public static void main(String[] args) {
         try {
-            Authenticator.create_account("userxxx124", "asf@hotmail124", "tomigr124", "qwe", "qwe");
+            Authenticator.create_account("asd", "asd", "asd", "asd", "asd");
         } catch (IOException e) {
             e.printStackTrace();
         } catch (PasswordDoesNotMeetRequirementsException e) {
@@ -22,14 +21,6 @@ public class mainTest {
             e.printStackTrace();
         }
 
-        try {
-            Account acc = Authenticator.login("userxxx124", "qwe");
-            System.out.println(acc.getUsername());
-        } catch (AuthenticationErrorException e) {
-            e.printStackTrace();
-        } catch (UndefinedAccountException e) {
-            e.printStackTrace();
-        }
 
     }
 }

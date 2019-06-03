@@ -17,8 +17,8 @@ import java.util.Scanner;
 
 public class Client {
     //Comands
-    private static final String EXIT = "SAIR";
-    private static final String LOGIN = "LOGIN";
+    private static final String EXIT = "sair";
+    private static final String LOGIN = "login";
 
     //Messages
     private static final String INVALID_COMMAND = "Commando invalido.";
@@ -27,6 +27,8 @@ public class Client {
     private static DataOutputStream writer;
     private static SSLClient client;
     private static CryptoAESUtil AliceCipher;
+
+    private static String mainToken;
 
     public static void main(String[] args) {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
@@ -45,7 +47,7 @@ public class Client {
             Scanner in = new Scanner(System.in);
             String command = "";
             while (!command.equals(EXIT)) {
-                command = in.nextLine().toUpperCase();
+                command = in.nextLine().toLowerCase();
                 commandsAnalyzer(command, in);
             }
 
@@ -83,7 +85,23 @@ public class Client {
         client.close();
     }
 
-    private static void login(String username, String password) throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, BadPaddingException, IllegalBlockSizeException, SignatureException {
+    private static void login(String username, String password) throws IOException {
+        int tmpBytesToRead;
+
+
+        writer.writeUTF("login");
+        writer.writeUTF(username);
+        writer.writeUTF(password);
+
+        tmpBytesToRead = reader.readInt();
+        byte[] token = new byte[tmpBytesToRead];
+        reader.readFully(token);
+        mainToken = new String(token);
+        System.out.println("GOT TOKEN: " + mainToken);
+
+    }
+
+    private static void login2(String username, String password) throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, BadPaddingException, IllegalBlockSizeException, SignatureException {
         int tmpBytesToRead;
 
 
